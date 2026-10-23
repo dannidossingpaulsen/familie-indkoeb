@@ -1,12 +1,32 @@
 <!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#164b3c"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Indkøb"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/svg+xml" href="ikon.svg"><link rel="apple-touch-icon" href="apple-touch-icon.png"><title>Indkøb</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f2f5f0;color:#193d31;font:16px system-ui,-apple-system,sans-serif}main,.login{max-width:660px;margin:auto;padding:20px 15px 70px}.hide{display:none!important}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:#668476}h1{margin:5px 0 16px;font-size:clamp(25px,6vw,35px);letter-spacing:-.04em}h2{font-size:17px;margin:0}.card{background:white;border:1px solid #e1e9e0;border-radius:18px;padding:17px;margin:13px 0;box-shadow:0 3px 16px #163d2b0b}input,button{font:inherit}input[type=email],input[type=password],input[type=text]{padding:13px;border:1px solid #cddbd0;border-radius:11px;min-width:0;width:100%;background:white}button{cursor:pointer}button:disabled{opacity:.5}.primary{border:0;border-radius:11px;background:#17533e;color:white;font-weight:700;padding:13px 16px}.soft{border:1px solid #d5e2d6;background:#f3f8f2;border-radius:10px;padding:8px 10px;color:#245941}.quiet{border:0;background:none;color:#527766;text-decoration:underline}.add{display:flex;gap:8px}.add input{flex:1}.item{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #edf1ec}.item:last-child{border:0}.item input[type=checkbox]{width:25px;height:25px;accent-color:#17533e;flex:none}.name{flex:1;overflow-wrap:anywhere;font-weight:600}.done .name{text-decoration:line-through;color:#9aaba0}.quantity{display:flex;align-items:center;gap:5px}.quantity button{border:1px solid #d8e4d9;background:#f5f8f4;border-radius:8px;width:30px;height:30px}.quantity span{min-width:18px;text-align:center}.delete{border:0;background:none;color:#a65b55;font-size:24px}.between{display:flex;justify-content:space-between;align-items:center;gap:8px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chips button{border:1px solid #d5e5d8;border-radius:25px;background:#f2f8f2;padding:7px 11px;color:#2b6047}.empty{padding:25px;text-align:center;color:#82978a}.muted{color:#7a9283;font-size:13px}.error{color:#b44841;font-size:13px;min-height:18px}.login{max-width:420px;padding-top:12vh}.login label{display:block;margin:13px 0 6px;font-weight:600}.login .primary{width:100%;margin-top:15px}body.dashboard{background:transparent}body.dashboard main{padding:5px;max-width:none}body.dashboard .card{margin:0;box-shadow:none;padding:12px}body.dashboard h1{font-size:19px;margin:0 0 8px}body.dashboard .item{padding:8px 0}body.dashboard .eyebrow,body.dashboard #logout,body.dashboard #addCard,body.dashboard #historyCard,body.dashboard #clear,body.dashboard .quantity button,body.dashboard .delete{display:none}body.dashboard .item input{pointer-events:none}body.dashboard .name{font-size:14px}
-</style></head><body><section id="login" class="login hide"><div class="card"><div class="eyebrow">FAMILIEN DØSSING PAULSEN</div><h1>🛒 Familiens indkøb</h1><p>Log ind med samme bruger som i familiekalenderen.</p><form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Adgangskode</label><input id="password" type="password" autocomplete="current-password" required><button class="primary">Log ind</button><p id="loginError" class="error"></p></form></div></section><main id="app" class="hide"><header class="top"><div><div class="eyebrow">FAMILIENS OVERBLIK</div><h1>🛒 Indkøbslisten</h1></div><button id="logout" class="quiet">Log ud</button></header><section class="card" id="addCard"><form id="addForm" class="add"><input id="newItem" type="text" maxlength="100" autocomplete="off" placeholder="Hvad mangler vi?" required><button class="primary">Tilføj</button></form><div id="suggestions" class="chips"></div></section><section class="card"><div class="between"><h2 id="count">Indkøb</h2><button id="clear" class="soft">Fjern afkrydsede</button></div><div id="items" class="empty">Henter varer …</div></section><section class="card" id="historyCard"><h2>Ofte købt</h2><div id="history" class="chips"></div></section><p id="status" class="error"></p><p class="muted" style="text-align:center">Fælles liste · Opdateres automatisk</p></main><script type="module">
+
+/* Prisguide */
+#priceGuide .guide-intro{margin:8px 0 13px;line-height:1.5}
+.guide-category{border-top:1px solid #e7eee6;padding:12px 0}
+.guide-category:first-child{border-top:0}
+.guide-category summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.guide-category summary::-webkit-details-marker{display:none}
+.guide-category summary:after{content:'⌄';font-size:20px;color:#63816e;flex:none;transition:transform .15s}
+.guide-category[open] summary:after{transform:rotate(180deg)}
+.guide-category .guide-title{font-weight:750;min-width:0}
+.guide-category .guide-best{text-align:right;margin-left:auto;font-weight:750;color:#17533e;font-size:14px}
+.guide-category .guide-best small{display:block;color:#7a9283;font-weight:400;font-size:11px;margin-top:3px}
+.guide-results{padding-top:11px}
+.guide-product{border-top:1px solid #edf1ec;padding:10px 0;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
+.guide-product:first-child{border-top:0}
+.guide-product-name{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.guide-product-price{font-weight:750;text-align:right;white-space:nowrap;color:#17533e;font-size:14px}
+.guide-product-price small{display:block;color:#7a9283;font-weight:400;font-size:12px;margin-top:3px}
+.guide-foot{margin:12px 0 0;font-size:12px;color:#6d8777;line-height:1.5}
+body.dashboard #priceGuide{display:none!important}
+</style></head><body><section id="login" class="login hide"><div class="card"><div class="eyebrow">FAMILIEN DØSSING PAULSEN</div><h1>🛒 Familiens indkøb</h1><p>Log ind med samme bruger som i familiekalenderen.</p><form id="loginForm"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Adgangskode</label><input id="password" type="password" autocomplete="current-password" required><button class="primary">Log ind</button><p id="loginError" class="error"></p></form></div></section><main id="app" class="hide"><header class="top"><div><div class="eyebrow">FAMILIENS OVERBLIK</div><h1>🛒 Indkøbslisten</h1></div><button id="logout" class="quiet">Log ud</button></header><section class="card" id="addCard"><form id="addForm" class="add"><input id="newItem" type="text" maxlength="100" autocomplete="off" placeholder="Hvad mangler vi?" required><button class="primary">Tilføj</button></form><div id="suggestions" class="chips"></div></section><section class="card"><div class="between"><h2 id="count">Indkøb</h2><button id="clear" class="soft">Fjern afkrydsede</button></div><div id="items" class="empty">Henter varer …</div></section><section class="card" id="historyCard"><h2>Ofte købt</h2><div id="history" class="chips"></div></section><section class="card" id="priceGuide"><div class="between"><h2>🏷️ Familiens prisguide</h2></div><p class="muted guide-intro">Sammenlign priser på vores faste varer. Billigst blandt de registrerede priser – ikke nødvendigvis blandt alle butikker.</p><div id="guideCategories"><div class="empty">Henter priser …</div></div><p class="guide-foot">Priserne stammer fra Prej og kan ændre sig i butikkerne. Kun prisregistreringer fra de seneste 3 dage vises. Der kan mangle butikker og tilbud.</p></section><p id="status" class="error"></p><p class="muted" style="text-align:center">Fælles liste · Opdateres automatisk</p></main><script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const db=createClient('https://kxopqitccnoycjwpibuj.supabase.co','sb_publishable_J6Ez04iYCczh_FW8OOQnig_3zcGxeaI');
 const $=id=>document.getElementById(id),dashboard=new URLSearchParams(location.search).get('mode')==='dashboard';if(dashboard)document.body.classList.add('dashboard');
 let signed=false,items=[],history=[],busy=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function show(ok){$('login').classList.toggle('hide',ok);$('app').classList.toggle('hide',!ok);if(ok&&!signed){signed=true;refresh()}if(!ok){signed=false;items=[];history=[]}}
+function show(ok){$('login').classList.toggle('hide',ok);$('app').classList.toggle('hide',!ok);if(ok&&!signed){signed=true;refresh();loadPriceGuide()}if(!ok){signed=false;items=[];history=[]}}
 async function refresh(){if(!signed||busy)return;const [a,b]=await Promise.all([db.from('indkoeb').select('id,vare,antal,afkrydset,oprettet_at').order('oprettet_at',{ascending:true}),db.from('indkoeb_historik').select('vare,sidst_brugt').order('sidst_brugt',{ascending:false}).limit(80)]);if(a.error){$('status').textContent='Kunne ikke hente varer: '+a.error.message;return}items=a.data||[];if(!b.error)history=b.data||[];render();$('status').textContent=''}
 function render(){const active=items.filter(x=>!x.afkrydset),done=items.filter(x=>x.afkrydset);$('count').textContent=`Mangler ${active.length} ${active.length===1?'vare':'varer'}`;$('clear').disabled=!done.length;const rows=[...active,...done];$('items').className='';$('items').innerHTML=rows.length?rows.map(x=>`<div class="item ${x.afkrydset?'done':''}" data-id="${x.id}"><input type="checkbox" aria-label="Købt: ${esc(x.vare)}" ${x.afkrydset?'checked':''}><span class="name">${esc(x.vare)}</span><div class="quantity"><button data-action="minus" aria-label="Færre">−</button><span>${x.antal}</span><button data-action="plus" aria-label="Flere">+</button></div><button class="delete" data-action="delete" aria-label="Slet">×</button></div>`).join(''):'<div class="empty">Listen er tom 🎉</div>';const present=new Set(items.map(x=>x.vare.toLocaleLowerCase('da-DK')));$('history').innerHTML=history.filter(x=>!present.has(x.vare.toLocaleLowerCase('da-DK'))).slice(0,15).map(x=>`<button data-vare="${esc(x.vare)}">+ ${esc(x.vare)}</button>`).join('')||'<span class="muted">Tidligere varer dukker op her.</span>';suggest()}
 function suggest(){const s=$('newItem').value.trim().toLocaleLowerCase('da-DK');$('suggestions').innerHTML=s?history.filter(x=>x.vare.toLocaleLowerCase('da-DK').includes(s)&&x.vare.toLocaleLowerCase('da-DK')!==s).slice(0,5).map(x=>`<button data-vare="${esc(x.vare)}">${esc(x.vare)}</button>`).join(''):''}
@@ -16,6 +36,57 @@ $('addForm').addEventListener('submit',e=>{e.preventDefault();add($('newItem').v
 $('items').addEventListener('change',e=>{if(dashboard||e.target.type!=='checkbox')return;const id=Number(e.target.closest('[data-id]').dataset.id),checked=e.target.checked;mutate(async()=>{const r=await db.from('indkoeb').update({afkrydset:checked,opdateret_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error})});
 $('items').addEventListener('click',e=>{if(dashboard)return;const b=e.target.closest('[data-action]');if(!b)return;const id=Number(b.closest('[data-id]').dataset.id),x=items.find(x=>x.id===id);if(!x)return;const action=b.dataset.action;if(action==='delete'&&!confirm(`Slet ${x.vare}?`))return;mutate(async()=>{const r=action==='delete'?await db.from('indkoeb').delete().eq('id',id):await db.from('indkoeb').update({antal:Math.max(1,x.antal+(action==='plus'?1:-1)),opdateret_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error})});
 $('clear').addEventListener('click',()=>{const n=items.filter(x=>x.afkrydset).length;if(!n||!confirm(`Fjern ${n} afkrydsede varer?`))return;mutate(async()=>{const r=await db.from('indkoeb').delete().eq('afkrydset',true);if(r.error)throw r.error})});
+
+// Prisguide: læser kun Supabase, aldrig Prej API direkte.
+const GUIDE_CATEGORIES=[
+  {id:'hakket_oksekoed',name:'Hakket oksekød',unit:'kr./kg'},
+  {id:'barista_havremaelk',name:'Barista-havremælk',unit:'kr./liter'},
+  {id:'bleer',name:'Bleer, str. 6',unit:'kr./ble'},
+  {id:'kyllingebryst',name:'Fersk kyllingebrystfilet',unit:'kr./kg'},
+  {id:'smoer',name:'Smør og smørbart',unit:'kr./kg'},
+  {id:'semper_klemmeposer',name:'Semper-klemmeposer',unit:'kr./100 g'},
+  {id:'aeg',name:'Skrabeæg',unit:'kr./æg'}
+];
+const guideMoney=n=>new Intl.NumberFormat('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n/100)+' kr.';
+function guideRelevant(row){
+  const n=String(row.produktnavn||'').toLocaleLowerCase('da-DK');
+  const m=String(row.maengde||'').toLocaleLowerCase('da-DK');
+  if(!Number.isFinite(row.enhedspris_oere)||row.enhedspris_oere<=0||!Number.isFinite(row.pris_oere)||row.pris_oere<=0)return false;
+  switch(row.kategori){
+    case 'hakket_oksekoed':return /hakket.*oksekød|oksekød.*hakket/.test(n)&&!/vegetar|vegan|plante/.test(n);
+    case 'barista_havremaelk':return /barista/.test(n)&&/naturli|oatly/.test(n)&&!/karamel|vanilje|caramel|vanilla/.test(n)&&/\b1\s*l\b|1000\s*ml/.test(m);
+    case 'bleer':return /bleer?|diaper|pants/.test(n)&&/(?:str\.?|størrelse|size)\s*6\b/.test(n)&&!/svømme|swim/.test(n)&&/\d+\s*stk/.test(m);
+    case 'kyllingebryst':return /kyllingebrystfilet|kyllingebrystfil[eé]t|brystfilet|brystfil[eé]t/.test(n)&&!/pålæg|skiver|stegt|grillet|marineret|bbq|barbecue|frossen|frost|nugget|røget|kogt|tern|øko|økolog/.test(n);
+    case 'smoer':return /smør|smørbar|kærgården|bakkedal|lurpak/.test(n)&&!/smøreost|ost|shampoo|balsam|makrel|laks|fisk|kiks|småkage|cookie|dej|karamel|hud|creme|sæbe|fedtreduceret|light|mini|laktosefri|økolog|øko|hvidløg|krydder|plantebaseret/.test(n);
+    case 'semper_klemmeposer':return /semper/.test(n)&&/smoothie|klemmepose|frugtmos|frugtgrød/.test(n)&&!/glas|pulver|flerkornsgrød/.test(n);
+    case 'aeg':return /skrabeæg/.test(n)&&!/økolog|øko|friland|vagtel|kogte/.test(n)&&/\d+\s*stk/.test(m);
+    default:return false;
+  }
+}
+function guideFresh(date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return false;
+  const day=new Date(date+'T00:00:00Z').getTime();
+  const today=new Date();const now=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate());
+  const days=(now-day)/86400000;
+  return days>=0&&days<=3;
+}
+async function loadPriceGuide(){
+  if(dashboard||!signed)return;
+  const el=$('guideCategories');
+  const {data,error}=await db.from('prisguide')
+    .select('kategori,produktnavn,butik,pris_oere,enhedspris_oere,maengde,pris_dato')
+    .in('kategori',GUIDE_CATEGORIES.map(c=>c.id))
+    .order('enhedspris_oere',{ascending:true}).limit(500);
+  if(!signed)return;
+  if(error){el.innerHTML='<p class="error">Kunne ikke hente priser: '+esc(error.message)+'</p>';return}
+  const valid=(data||[]).filter(r=>guideFresh(r.pris_dato)&&guideRelevant(r));
+  el.innerHTML=GUIDE_CATEGORIES.map(c=>{
+    const rows=valid.filter(r=>r.kategori===c.id).sort((a,b)=>a.enhedspris_oere-b.enhedspris_oere);
+    const best=rows[0];
+    return `<details class="guide-category"><summary><span class="guide-title">${esc(c.name)}</span><span class="guide-best">${best?guideMoney(best.enhedspris_oere):'Ingen aktuelle priser'}${best?`<small>${esc(c.unit)} · ${esc(best.butik)}</small>`:''}</span></summary><div class="guide-results">${rows.length?rows.map(r=>`<div class="guide-product"><div><div class="guide-product-name">${esc(r.produktnavn)}</div><div class="muted">${esc(r.butik)} · ${esc(r.maengde||'Pakning ukendt')} · ${esc(new Date(r.pris_dato+'T12:00:00').toLocaleDateString('da-DK'))}</div></div><div class="guide-product-price">${guideMoney(r.enhedspris_oere)}<small>${esc(c.unit)}</small><small>Pakke: ${guideMoney(r.pris_oere)}</small></div></div>`).join(''):'<p class="muted">Ingen aktuelle, sammenlignelige priser registreret.</p>'}</div></details>`;
+  }).join('');
+}
+
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';const {error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)$('loginError').textContent='Login mislykkedes: '+error.message});$('logout').addEventListener('click',()=>db.auth.signOut());
-(async()=>{const {data:{session}}=await db.auth.getSession();show(!!session);db.auth.onAuthStateChange((_event,session)=>show(!!session))})();setInterval(()=>{if(signed&&!document.hidden)refresh()},10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&signed)refresh()});
+(async()=>{const {data:{session}}=await db.auth.getSession();show(!!session);db.auth.onAuthStateChange((_event,session)=>show(!!session))})();setInterval(()=>{if(signed&&!document.hidden)refresh()},10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&signed){refresh();loadPriceGuide()}});
 </script></body></html>
