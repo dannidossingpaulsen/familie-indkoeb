@@ -43,7 +43,8 @@ const GUIDE_CATEGORIES=[
   {id:'barista_havremaelk',name:'Barista-havremælk',unit:'kr./liter'},
   {id:'bleer',name:'Bleer, str. 6',unit:'kr./ble'},
   {id:'kyllingebryst',name:'Fersk kyllingebrystfilet',unit:'kr./kg'},
-  {id:'smoer',name:'Smør og smørbart',unit:'kr./kg'},
+  {id:'smoer',name:'Smør',unit:'kr./kg',kind:'smoer'},
+   {id:'smoer',name:'Smørbart',unit:'kr./kg',kind:'smoerbart'},
   {id:'semper_klemmeposer',name:'Semper-klemmeposer',unit:'kr./100 g'},
   {id:'aeg',name:'Skrabeæg',unit:'kr./æg'}
 ];
@@ -56,12 +57,21 @@ function guideRelevant(row){
     case 'hakket_oksekoed':return /hakket.*oksekød|oksekød.*hakket/.test(n)&&!/vegetar|vegan|plante/.test(n);
     case 'barista_havremaelk':return /barista/.test(n)&&/naturli|oatly/.test(n)&&!/karamel|vanilje|caramel|vanilla/.test(n)&&/\b1\s*l\b|1000\s*ml/.test(m);
     case 'bleer':return /bleer?|diaper|pants/.test(n)&&/(?:str\.?|størrelse|size)\s*6\b/.test(n)&&!/svømme|swim/.test(n)&&/\d+\s*stk/.test(m);
-    case 'kyllingebryst':return /kyllingebrystfilet|kyllingebrystfil[eé]t|brystfilet|brystfil[eé]t/.test(n)&&!/pålæg|skiver|stegt|grillet|marineret|bbq|barbecue|frossen|frost|nugget|røget|kogt|tern|øko|økolog/.test(n);
-    case 'smoer':return /smør|smørbar|kærgården|bakkedal|lurpak/.test(n)&&!/smøreost|ost|shampoo|balsam|makrel|laks|fisk|kiks|småkage|cookie|dej|karamel|hud|creme|sæbe|fedtreduceret|light|mini|laktosefri|økolog|øko|hvidløg|krydder|plantebaseret/.test(n);
+    case 'kyllingebryst':return /kyllingebrystfilet|kyllingebrystfil[eé]t|brystfilet|brystfil[eé]t/.test(n)&&!/pålæg|skiver|stegt|grillet|marineret|marinade|bbq|barbecue|frossen|frost|nugget|røget|kogt|tern|øko|økolog|lemon|butter|citron|krydder|paneret/.test(n);
+    case 'smoer':return /smør|kærgården|bakkedal|lurpak/.test(n)&&!/smørrebrød|smøreost|ost|shampoo|balsam|makrel|laks|fisk|kiks|småkage|cookie|dej|karamel|hud|creme|sæbe|fedtreduceret|light|let smør|smørbart 38|mini|laktosefri|økolog|øko|hvidløg|krydder|plantebaseret/.test(n);
     case 'semper_klemmeposer':return /semper/.test(n)&&/smoothie|klemmepose|frugtmos|frugtgrød/.test(n)&&!/glas|pulver|flerkornsgrød/.test(n);
     case 'aeg':return /skrabeæg/.test(n)&&!/økolog|øko|friland|vagtel|kogte/.test(n)&&/\d+\s*stk/.test(m);
     default:return false;
   }
+}
+function guideButterKind(row){
+  const n=String(row.produktnavn||'').toLocaleLowerCase('da-DK');
+  return /smørbar|smørbart|kærgården|bakkedal/.test(n)?'smoerbart':'smoer';
+}
+function guideUnitPrice(row){
+  // Prej angiver enhedspris i øre pr. kg, også for klemmeposer.
+  // Vis klemmeposer i øre pr. 100 gram.
+  return row.kategori==='semper_klemmeposer'?row.enhedspris_oere/10:row.enhedspris_oere;
 }
 function guideFresh(date){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return false;
@@ -75,15 +85,15 @@ async function loadPriceGuide(){
   const el=$('guideCategories');
   const {data,error}=await db.from('prisguide')
     .select('kategori,produktnavn,butik,pris_oere,enhedspris_oere,maengde,pris_dato')
-    .in('kategori',GUIDE_CATEGORIES.map(c=>c.id))
+    .in('kategori',[...new Set(GUIDE_CATEGORIES.map(c=>c.id))])
     .order('enhedspris_oere',{ascending:true}).limit(500);
   if(!signed)return;
   if(error){el.innerHTML='<p class="error">Kunne ikke hente priser: '+esc(error.message)+'</p>';return}
   const valid=(data||[]).filter(r=>guideFresh(r.pris_dato)&&guideRelevant(r));
   el.innerHTML=GUIDE_CATEGORIES.map(c=>{
-    const rows=valid.filter(r=>r.kategori===c.id).sort((a,b)=>a.enhedspris_oere-b.enhedspris_oere);
+    const rows=valid.filter(r=>r.kategori===c.id&&(!c.kind||guideButterKind(r)===c.kind)).sort((a,b)=>guideUnitPrice(a)-guideUnitPrice(b));
     const best=rows[0];
-    return `<details class="guide-category"><summary><span class="guide-title">${esc(c.name)}</span><span class="guide-best">${best?guideMoney(best.enhedspris_oere):'Ingen aktuelle priser'}${best?`<small>${esc(c.unit)} · ${esc(best.butik)}</small>`:''}</span></summary><div class="guide-results">${rows.length?rows.map(r=>`<div class="guide-product"><div><div class="guide-product-name">${esc(r.produktnavn)}</div><div class="muted">${esc(r.butik)} · ${esc(r.maengde||'Pakning ukendt')} · ${esc(new Date(r.pris_dato+'T12:00:00').toLocaleDateString('da-DK'))}</div></div><div class="guide-product-price">${guideMoney(r.enhedspris_oere)}<small>${esc(c.unit)}</small><small>Pakke: ${guideMoney(r.pris_oere)}</small></div></div>`).join(''):'<p class="muted">Ingen aktuelle, sammenlignelige priser registreret.</p>'}</div></details>`;
+    return `<details class="guide-category"><summary><span class="guide-title">${esc(c.name)}</span><span class="guide-best">${best?guideMoney(guideUnitPrice(best)):'Ingen aktuelle priser'}${best?`<small>${esc(c.unit)} · ${esc(best.butik)}</small>`:''}</span></summary><div class="guide-results">${rows.length?rows.map(r=>`<div class="guide-product"><div><div class="guide-product-name">${esc(r.produktnavn)}</div><div class="muted">${esc(r.butik)} · ${esc(r.maengde||'Pakning ukendt')} · ${esc(new Date(r.pris_dato+'T12:00:00').toLocaleDateString('da-DK'))}</div></div><div class="guide-product-price">${guideMoney(guideUnitPrice(r))}<small>${esc(c.unit)}</small><small>Pakke: ${guideMoney(r.pris_oere)}</small></div></div>`).join(''):'<p class="muted">Ingen aktuelle, sammenlignelige priser registreret.</p>'}</div></details>`;
   }).join('');
 }
 
