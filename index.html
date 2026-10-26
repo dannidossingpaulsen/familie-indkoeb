@@ -46,7 +46,9 @@ const GUIDE_CATEGORIES=[
   {id:'smoer',name:'Smør',unit:'kr./kg',kind:'smoer'},
    {id:'smoer',name:'Smørbart',unit:'kr./kg',kind:'smoerbart'},
   {id:'semper_klemmeposer',name:'Semper-klemmeposer',unit:'kr./100 g'},
-  {id:'aeg',name:'Skrabeæg',unit:'kr./æg'}
+  {id:'aeg',name:'Skrabeæg',unit:'kr./æg'},
+  {id:'pepsi_max_daase',name:'Pepsi Max · 33 cl dåser',unit:'kr./dåse'},
+  {id:'vaadservietter',name:'Babyvådservietter',unit:'kr./serviet'}
 ];
 const guideMoney=n=>new Intl.NumberFormat('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n/100)+' kr.';
 function guideRelevant(row){
@@ -60,6 +62,8 @@ function guideRelevant(row){
     case 'kyllingebryst':return /kyllingebrystfilet|kyllingebrystfil[eé]t|brystfilet|brystfil[eé]t/.test(n)&&!/pålæg|skiver|stegt|grillet|marineret|marinade|bbq|barbecue|frossen|frost|nugget|røget|kogt|tern|øko|økolog|lemon|butter|citron|krydder|paneret/.test(n);
     case 'smoer':return /smør|kærgården|bakkedal|lurpak/.test(n)&&!/smørrebrød|smøreost|ost|shampoo|balsam|makrel|laks|fisk|kiks|småkage|cookie|dej|karamel|hud|creme|sæbe|fedtreduceret|light|let smør|smørbart 38|mini|laktosefri|økolog|øko|hvidløg|krydder|plantebaseret/.test(n);
     case 'semper_klemmeposer':return /semper/.test(n)&&/smoothie|klemmepose|frugtmos|frugtgrød/.test(n)&&!/glas|pulver|flerkornsgrød/.test(n);
+    case 'pepsi_max_daase':return /pepsi[\s-]*max/.test(n)&&/33 cl\/dåse/.test(m)&&!/lime|lemon|citron|cherry|mango|koffeinfri|caffeine|flaske|bottle|sirup/.test(n);
+    case 'vaadservietter':return /vådserviet|vaadserviet|baby wipes|babywipes/.test(n)&&/\d+\s*stk/.test(m)&&!/rengøring|desinf|antibakter|makeup|make-up|ansigt|intim|toilet|gulv|køkken|overflade|brille|skærm|hund|kat|bilpleje/.test(n);
     case 'aeg':return /skrabeæg/.test(n)&&!/økolog|øko|friland|vagtel|kogte/.test(n)&&/\d+\s*stk/.test(m);
     default:return false;
   }
@@ -93,7 +97,7 @@ async function loadPriceGuide(){
   el.innerHTML=GUIDE_CATEGORIES.map(c=>{
     const rows=valid.filter(r=>r.kategori===c.id&&(!c.kind||guideButterKind(r)===c.kind)).sort((a,b)=>guideUnitPrice(a)-guideUnitPrice(b));
     const best=rows[0];
-    return `<details class="guide-category"><summary><span class="guide-title">${esc(c.name)}</span><span class="guide-best">${best?guideMoney(guideUnitPrice(best)):'Ingen aktuelle priser'}${best?`<small>${esc(c.unit)} · ${esc(best.butik)}</small>`:''}</span></summary><div class="guide-results">${rows.length?rows.map(r=>`<div class="guide-product"><div><div class="guide-product-name">${esc(r.produktnavn)}</div><div class="muted">${esc(r.butik)} · ${esc(r.maengde||'Pakning ukendt')} · ${esc(new Date(r.pris_dato+'T12:00:00').toLocaleDateString('da-DK'))}</div></div><div class="guide-product-price">${guideMoney(guideUnitPrice(r))}<small>${esc(c.unit)}</small><small>Pakke: ${guideMoney(r.pris_oere)}</small></div></div>`).join(''):'<p class="muted">Ingen aktuelle, sammenlignelige priser registreret.</p>'}</div></details>`;
+    return `<details class="guide-category"><summary><span class="guide-title">${esc(c.name)}</span><span class="guide-best">${best?guideMoney(guideUnitPrice(best)):'Ingen aktuelle priser'}${best?`<small>${esc(c.unit)} · ${esc(best.butik)}</small>`:''}</span></summary><div class="guide-results">${c.id==='pepsi_max_daase'?'<p class="muted">Priser som oplyst af Prej. Det er endnu ikke verificeret, om pant indgår. Mængderabatter er ikke medregnet.</p>':''}${rows.length?rows.map(r=>`<div class="guide-product"><div><div class="guide-product-name">${esc(r.produktnavn)}</div><div class="muted">${esc(r.butik)} · ${esc(r.maengde||'Pakning ukendt')} · ${esc(new Date(r.pris_dato+'T12:00:00').toLocaleDateString('da-DK'))}</div></div><div class="guide-product-price">${guideMoney(guideUnitPrice(r))}<small>${esc(c.unit)}</small><small>Pakke: ${guideMoney(r.pris_oere)}</small></div></div>`).join(''):'<p class="muted">Ingen aktuelle, sammenlignelige priser registreret.</p>'}</div></details>`;
   }).join('');
 }
 
